@@ -120,22 +120,19 @@ def _ler_incerteza_medicao(registro):
 
 
 def _ler_dispersao(incerteza):
-    """Uma "Dispersão das medidas (s)" por bloco da aba Incerteza (valor na coluna B)."""
-    dispersoes = []
+    """"Dispersão das medidas (s)" do bloco Volumétrico da aba Incerteza (valor na coluna B).
+
+    A aba tem dois blocos com esse título; vale o primeiro, que é o que alimenta a
+    incerteza final. O segundo é uma cópia com valores digitados e é ignorado.
+    """
     bloco = None
     for linha in range(1, incerteza["ultima_linha"] + 1):
         rotulo = incerteza["valores"].get(f"A{linha}")
         if rotulo == "OBJETO:":  # início de um bloco; o título fica ao lado, na coluna B
             bloco = incerteza["valores"].get(f"B{linha}")
-        elif rotulo == "Dispersão das medidas (s)":
-            dispersoes.append({
-                "bloco": bloco,
-                "linha": linha,
-                "valor": _numero(incerteza, f"B{linha}"),
-            })
-    if not dispersoes:
-        raise ValueError("Nenhuma 'Dispersão das medidas (s)' encontrada na aba Incerteza.")
-    return dispersoes
+        elif rotulo == "Dispersão das medidas (s)" and bloco == "CONTROLE DIMENSIONAL - Volumétrico":
+            return _numero(incerteza, f"B{linha}")
+    raise ValueError("'Dispersão das medidas (s)' do bloco Volumétrico não encontrada na aba Incerteza.")
 
 
 def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None):
