@@ -1,3 +1,4 @@
+import streamlit as st
 import json
 import io
 from zipfile import ZipFile
@@ -6,8 +7,12 @@ from defusedxml.ElementTree import fromstring
 
 import captura
 
-arquivo = "Dispositivo de controle.xlsx"
+st.set_page_config(page_title="Validar Certificados", layout="wide")
 
+st.title("📄 Gerador de Certificado de Calibração")
+st.write("Insira uma planilha de calibração.")
+
+arquivo = st.file_uploader("Selecione a planilha (.xlsx)", type="xlsx", accept_multiple_files=False)
 
 def caminho_da_aba(planilha, nome):
     """Descobre o arquivo XML de uma aba pelo nome (xlsx comum ou Strict)."""
@@ -25,14 +30,15 @@ def caminho_da_aba(planilha, nome):
             return destino.lstrip("/") if destino.startswith("/") else f"xl/{destino}"
     raise ValueError(f"Aba '{nome}' não encontrada na planilha.")
 
+if arquivo is not None:
+    with ZipFile(arquivo) as planilha:
+        textos = "xl/sharedStrings.xml"
+        dados = captura.extrair_dados(
+            planilha.read(caminho_da_aba(planilha, "Registro")),
+            planilha.read(caminho_da_aba(planilha, "Incerteza")),
+            planilha.read(caminho_da_aba(planilha, "Certificado")),
+            planilha.read(textos) if textos in planilha.namelist() else None,
+        )
+    print(json.dumps(dados, ensure_ascii=False, indent=2))
 
-with ZipFile(arquivo) as planilha:
-    textos = "xl/sharedStrings.xml"
-    dados = captura.extrair_dados(
-        planilha.read(caminho_da_aba(planilha, "Registro")),
-        planilha.read(caminho_da_aba(planilha, "Incerteza")),
-        planilha.read(caminho_da_aba(planilha, "Certificado")),
-        planilha.read(textos) if textos in planilha.namelist() else None,
-    )
 
-print(json.dumps(dados, ensure_ascii=False, indent=2))
