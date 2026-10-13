@@ -107,6 +107,8 @@ def _ler_parametros(registro):
             "valor_nominal": _numero(registro, f"C{linha}"),
             "tol_mais": _numero(registro, f"D{linha}"),
             "tol_menos": _numero(registro, f"E{linha}"),
+            "medida_1": _numero(registro, f"F{linha}"),
+            "medida_2": _numero(registro, f"G{linha}"),
             # Coluna H do Registro = AVERAGE(Medida 1; Medida 2)
             "media_medidas": _numero(registro, f"H{linha}"),
         })
