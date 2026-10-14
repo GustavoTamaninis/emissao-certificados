@@ -1,11 +1,12 @@
 import streamlit as st
-import json
-import io
 from zipfile import ZipFile
 
 from defusedxml.ElementTree import fromstring
 
+import calculos
 import captura
+import certificado
+from formatacao import formatar_numero
 
 st.set_page_config(page_title="Validar Certificados", layout="wide")
 
@@ -39,6 +40,59 @@ if arquivo is not None:
             planilha.read(caminho_da_aba(planilha, "Certificado")),
             planilha.read(textos) if textos in planilha.namelist() else None,
         )
-    print(json.dumps(dados, ensure_ascii=False, indent=2))
+
+    resultados, parecer, motivo = calculos.calcular_resultados(dados["parametros"])
+
+    numero_certificado = st.text_input("Número do certificado", value="")
+
+    if parecer == "NÃO AVALIADO":
+        st.warning(motivo)
+    else:
+        cor_parecer = "green" if parecer == "APROVADO" else "red"
+        st.markdown(f"## :{cor_parecer}[Parecer final: {parecer}]")
+
+    linhas_tabela = [
+        {
+            "Parâmetro avaliado": resultado["parametro_avaliado"],
+            "Valor nominal": formatar_numero(resultado["valor_nominal"]),
+            "Tol. +": formatar_numero(resultado["tol_mais"]),
+            "Tol. -": formatar_numero(resultado["tol_menos"]),
+            "Valor obtido": formatar_numero(resultado["media"]),
+            "Erro": formatar_numero(resultado["erro"]),
+        }
+        for resultado in resultados
+    ]
+    st.table(linhas_tabela)
+
+    st.write(f"**Solicitante:** {dados['cliente_solicitante'] or ''}")
+    st.write(f"**Denominação:** {dados['denominacao'] or ''}")
+    st.write(f"**Código:** {dados['codigo'] or ''}")
+    st.write(f"**Fabricante:** {dados['fabricante'] or ''}")
+    st.write(f"**Técnico executante:** {dados['tecnico_executante'] or ''}")
+    st.write(f"**Incerteza de medição:** {formatar_numero(dados['incerteza_medicao'])} mm")
+    st.write(f"**k:** {formatar_numero(dados['fator_k'])}")
+
+    pode_gerar_pdf = bool(numero_certificado) and parecer != "NÃO AVALIADO"
+
+    pdf_bytes = (
+        certificado.gerar_certificado_pdf(dados, resultados, parecer, numero_certificado)
+        if pode_gerar_pdf
+        else b""
+    )
+    nome_arquivo = f"certificado_{numero_certificado.replace('/', '-')}.pdf"
+
+    if not pode_gerar_pdf:
+        if not numero_certificado:
+            st.caption("Preencha o número do certificado para liberar o download.")
+        else:
+            st.caption("A planilha não pôde ser avaliada, então o certificado não pode ser gerado.")
+
+    st.download_button(
+        "Gerar certificado em PDF",
+        data=pdf_bytes,
+        file_name=nome_arquivo,
+        mime="application/pdf",
+        disabled=not pode_gerar_pdf,
+    )
 
 
