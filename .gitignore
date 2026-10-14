@@ -1,1 +1,4 @@
 *.xlsx
+__pycache__/
+streamlit_out.log
+streamlit_err.log

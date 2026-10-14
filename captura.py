@@ -107,8 +107,8 @@ def _ler_parametros(registro):
             "valor_nominal": _numero(registro, f"C{linha}"),
             "tol_mais": _numero(registro, f"D{linha}"),
             "tol_menos": _numero(registro, f"E{linha}"),
-            # Coluna H do Registro = AVERAGE(Medida 1; Medida 2)
-            "media_medidas": _numero(registro, f"H{linha}"),
+            "medida_1": _numero(registro, f"F{linha}"),
+            "medida_2": _numero(registro, f"G{linha}"),
         })
     return parametros
 
@@ -162,6 +162,24 @@ def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None)
         "codigo": _texto(registro, "C18"),
         "denominacao": _texto(registro, "C20"),
         "fabricante": _texto(registro, "C24"),
+        "numero_certificado_planilha": _texto(certificado, "F6"),
+        "certificado_padrao": _texto(certificado, "A21"),
+        "procedimento": _texto(certificado, "D26"),
+        "metodo": _texto(certificado, "A28"),
+        "observacoes": _texto(certificado, "A49"),
+        "signatario": _texto(certificado, "F56"),
+        "cargo_signatario": _texto(certificado, "F57"),
+        "fator_k": _numero(certificado, "F45"),
+        # notas são opcionais: só entram as células realmente preenchidas, na ordem da planilha
+        "notas": [
+            nota for nota in (
+                _texto(certificado, "A59"),
+                _texto(certificado, "A60"),
+                _texto(certificado, "A61"),
+                _texto(certificado, "A62"),
+            )
+            if nota is not None
+        ],
         "parametros": _ler_parametros(registro),
         "incerteza_medicao": _ler_incerteza_medicao(registro),
         "dispersao_medidas": _ler_dispersao(incerteza),
