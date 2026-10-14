@@ -80,12 +80,25 @@ def _numero(aba, endereco):
         return None
 
 
-def _procurar(aba, coluna, rotulo, desde=1):
-    """Primeira linha (>= desde) cuja célula da coluna tem exatamente esse texto."""
+def _procurar_opcional(aba, coluna, rotulo, desde=1):
+    """Como _procurar, mas devolve None em vez de levantar erro quando não acha o rótulo.
+
+    Usada para campos que ficam depois de uma tabela de tamanho variável (aba
+    Certificado): o deslocamento é sempre o mesmo a partir do rótulo, mas o
+    rótulo em si pode estar em qualquer linha.
+    """
     for linha in range(desde, aba["ultima_linha"] + 1):
         if aba["valores"].get(f"{coluna}{linha}") == rotulo:
             return linha
-    raise ValueError(f"Rótulo '{rotulo}' não encontrado na coluna {coluna} da aba {aba['nome']}.")
+    return None
+
+
+def _procurar(aba, coluna, rotulo, desde=1):
+    """Primeira linha (>= desde) cuja célula da coluna tem exatamente esse texto."""
+    linha = _procurar_opcional(aba, coluna, rotulo, desde)
+    if linha is None:
+        raise ValueError(f"Rótulo '{rotulo}' não encontrado na coluna {coluna} da aba {aba['nome']}.")
+    return linha
 
 
 def _ler_parametros(registro):
@@ -135,6 +148,38 @@ def _ler_dispersao(incerteza):
     raise ValueError("'Dispersão das medidas (s)' do bloco Volumétrico não encontrada na aba Incerteza.")
 
 
+def _ler_signatario(certificado):
+    """Nome e cargo de quem assina, na aba Certificado.
+
+    Ficam sempre 4 e 5 linhas abaixo do rótulo "Técnico executante:", não em
+    endereço fixo, porque a tabela de resultados (que fica acima) tem tamanho
+    variável e desloca tudo que vem depois dela.
+    """
+    linha_tecnico = _procurar_opcional(certificado, "A", "Técnico executante:")
+    if linha_tecnico is None:
+        return None, None
+    signatario = _texto(certificado, f"F{linha_tecnico + 4}")
+    cargo_signatario = _texto(certificado, f"F{linha_tecnico + 5}")
+    return signatario, cargo_signatario
+
+
+def _ler_notas(certificado):
+    """As notas de rodapé, na aba Certificado: até 4 linhas logo abaixo do rótulo "Notas:".
+
+    Para na primeira linha vazia, porque nem toda planilha preenche as 4.
+    """
+    linha_notas = _procurar_opcional(certificado, "A", "Notas:")
+    if linha_notas is None:
+        return []
+    notas = []
+    for deslocamento in range(1, 5):
+        nota = _texto(certificado, f"A{linha_notas + deslocamento}")
+        if nota is None:
+            break
+        notas.append(nota)
+    return notas
+
+
 def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None):
     """Extrai os campos do modelo usando os XMLs internos do Excel.
 
@@ -154,6 +199,8 @@ def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None)
     incerteza = _ler_aba(xml_incerteza, "Incerteza", textos, problemas)
     certificado = _ler_aba(xml_certificado, "Certificado", textos, problemas)
 
+    signatario, cargo_signatario = _ler_signatario(certificado)
+
     return {
         "data": _texto(registro, "C5"),
         "cliente_solicitante": _texto(registro, "C7"),
@@ -166,20 +213,14 @@ def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None)
         "certificado_padrao": _texto(certificado, "A21"),
         "procedimento": _texto(certificado, "D26"),
         "metodo": _texto(certificado, "A28"),
-        "observacoes": _texto(certificado, "A49"),
-        "signatario": _texto(certificado, "F56"),
-        "cargo_signatario": _texto(certificado, "F57"),
-        "fator_k": _numero(certificado, "F45"),
-        # notas são opcionais: só entram as células realmente preenchidas, na ordem da planilha
-        "notas": [
-            nota for nota in (
-                _texto(certificado, "A59"),
-                _texto(certificado, "A60"),
-                _texto(certificado, "A61"),
-                _texto(certificado, "A62"),
-            )
-            if nota is not None
-        ],
+        # observacoes e fator_k ficam na aba Registro: são posição fixa, ao
+        # contrário da aba Certificado, onde a tabela de resultados tem
+        # tamanho variável e desloca tudo que vem depois dela
+        "observacoes": _texto(registro, "A71"),
+        "fator_k": _numero(registro, "F66"),
+        "signatario": signatario,
+        "cargo_signatario": cargo_signatario,
+        "notas": _ler_notas(certificado),
         "parametros": _ler_parametros(registro),
         "incerteza_medicao": _ler_incerteza_medicao(registro),
         "dispersao_medidas": _ler_dispersao(incerteza),

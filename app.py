@@ -41,12 +41,15 @@ if arquivo is not None:
             planilha.read(textos) if textos in planilha.namelist() else None,
         )
 
-    resultados, parecer = calculos.calcular_resultados(dados["parametros"])
+    resultados, parecer, motivo = calculos.calcular_resultados(dados["parametros"])
 
     numero_certificado = st.text_input("Número do certificado", value="")
 
-    cor_parecer = "green" if parecer == "APROVADO" else "red"
-    st.markdown(f"## :{cor_parecer}[Parecer final: {parecer}]")
+    if parecer == "NÃO AVALIADO":
+        st.warning(motivo)
+    else:
+        cor_parecer = "green" if parecer == "APROVADO" else "red"
+        st.markdown(f"## :{cor_parecer}[Parecer final: {parecer}]")
 
     linhas_tabela = [
         {
@@ -69,19 +72,27 @@ if arquivo is not None:
     st.write(f"**Incerteza de medição:** {formatar_numero(dados['incerteza_medicao'])} mm")
     st.write(f"**k:** {formatar_numero(dados['fator_k'])}")
 
+    pode_gerar_pdf = bool(numero_certificado) and parecer != "NÃO AVALIADO"
+
     pdf_bytes = (
         certificado.gerar_certificado_pdf(dados, resultados, parecer, numero_certificado)
-        if numero_certificado
+        if pode_gerar_pdf
         else b""
     )
     nome_arquivo = f"certificado_{numero_certificado.replace('/', '-')}.pdf"
+
+    if not pode_gerar_pdf:
+        if not numero_certificado:
+            st.caption("Preencha o número do certificado para liberar o download.")
+        else:
+            st.caption("A planilha não pôde ser avaliada, então o certificado não pode ser gerado.")
 
     st.download_button(
         "Gerar certificado em PDF",
         data=pdf_bytes,
         file_name=nome_arquivo,
         mime="application/pdf",
-        disabled=not numero_certificado,
+        disabled=not pode_gerar_pdf,
     )
 
 
