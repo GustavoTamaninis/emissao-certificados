@@ -41,3 +41,4 @@ As bibliotecas usadas pelo projeto estão no `requirements.txt`. Sempre que uma 
 ```powershell
 pip freeze > requirements.txt
 ```
+# Projeto de Calibração - AV3
