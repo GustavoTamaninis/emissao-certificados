@@ -50,8 +50,18 @@ def calcular_resultados(parametros):
         tol_menos = Decimal(str(parametro["tol_menos"]))
 
         media = arredondar((medida_1 + medida_2) / 2, 4)
-        erro = arredondar(media - valor_nominal, 4)
-        dentro_da_tolerancia = tol_menos <= erro <= tol_mais
+         
+         
+        #=====================================================================
+        # 2. CÁLCULO DO ERRO SISTEMÁTICO (Diferença entre média lida e valor padrão
+        # =====================================================================
+
+        erro_sistematico = arredondar(media - valor_nominal, 4) 
+
+        # =====================================================================
+        # 3. VALIDAÇÃO POR PONTO E LEA (Comparação ponto a ponto com limites)
+        # =====================================================================
+        dentro_da_tolerancia = tol_menos <= erro_sistematico <= tol_mais
 
         if not dentro_da_tolerancia:
             aprovado_geral = False
@@ -62,7 +72,7 @@ def calcular_resultados(parametros):
             "tol_mais": parametro["tol_mais"],
             "tol_menos": parametro["tol_menos"],
             "media": media,
-            "erro": erro,
+            "erro": erro_sistematico,
             "dentro_da_tolerancia": dentro_da_tolerancia,
         })
 
