@@ -2,6 +2,15 @@ import re
 
 from defusedxml.ElementTree import fromstring
 
+def validar_dados_completos(dados):
+    """Trata informações incompletas ou campos essenciais vazios."""
+    campos_obrigatorios = ['data', 'cliente_solicitante', 'codigo', 'denominacao']
+    for campo in campos_obrigatorios:
+        if not dados.get(campo):
+            raise ValueError(f"Informação incompleta: o campo '{campo}' está vazio na planilha.")
+            
+    if not dados.get('parametros'):
+        raise ValueError("A planilha não contém linhas de parâmetros de medição preenchidas.")
 
 def _ler_textos(xml_textos):
     textos = []
