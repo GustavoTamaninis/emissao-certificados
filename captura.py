@@ -210,7 +210,7 @@ def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None)
 
     signatario, cargo_signatario = _ler_signatario(certificado)
 
-    return {
+    dados = {
         "data": _texto(registro, "C5"),
         "cliente_solicitante": _texto(registro, "C7"),
         "tecnico_executante": _texto(registro, "C9"),
@@ -235,3 +235,5 @@ def extrair_dados(xml_registro, xml_incerteza, xml_certificado, xml_textos=None)
         "dispersao_medidas": _ler_dispersao(incerteza),
         "problemas": problemas,
     }
+    validar_dados_completos(dados)
+    return dados
