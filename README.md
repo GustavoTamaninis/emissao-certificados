@@ -1,6 +1,6 @@
 # emissao-certificados
 
-Aplicativo em Streamlit para extrair os dados de uma planilha de calibração (.xlsx) e gerar o certificado de calibração.
+Aplicação para extrair os dados de uma planilha de calibração (.xlsx) e gerar o certificado de calibração.
 
 ## Pré-requisitos
 
@@ -23,7 +23,7 @@ Aplicativo em Streamlit para extrair os dados de uma planilha de calibração (.
 3. Instale as dependências listadas no `requirements.txt`:
 
    ```powershell
-   pip install -r requirements.txt
+   py -3.13 -m pip install -r requirements.txt
    ```
 
 ## Como executar
@@ -31,7 +31,7 @@ Aplicativo em Streamlit para extrair os dados de uma planilha de calibração (.
 Com o ambiente virtual ativado:
 
 ```powershell
-streamlit run app.py
+py -3.13 -m streamlit run app.py
 ```
 
 ## Dependências
@@ -41,4 +41,3 @@ As bibliotecas usadas pelo projeto estão no `requirements.txt`. Sempre que uma 
 ```powershell
 pip freeze > requirements.txt
 ```
-# Projeto de Calibração - AV3
