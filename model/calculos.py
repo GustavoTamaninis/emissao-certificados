@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from formatacao import arredondar
+from model.formatacao import arredondar
 
 
 def calcular_resultados(parametros):

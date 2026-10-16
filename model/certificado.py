@@ -8,7 +8,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from formatacao import formatar_data, formatar_numero
+from model.formatacao import formatar_data, formatar_numero
 
 LARGURA_UTIL = 18 * cm
 
