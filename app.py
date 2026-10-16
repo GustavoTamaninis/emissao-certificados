@@ -3,10 +3,8 @@ from zipfile import ZipFile
 
 from defusedxml.ElementTree import fromstring
 
-import calculos
-import captura
-import certificado
-from formatacao import formatar_numero
+from model import calculos, captura, certificado
+from model.formatacao import formatar_numero
 
 st.set_page_config(page_title="Validar Certificados", layout="wide")
 
