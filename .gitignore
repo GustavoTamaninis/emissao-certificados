@@ -3,3 +3,7 @@ __pycache__/
 streamlit_out.log
 streamlit_err.log
 .idea/claudeCodeTabState.xml
+
+# Ambiente virtual criado pelo iniciar_aplicacao_schulz.bat
+.venv/
+venv/
